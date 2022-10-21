@@ -312,7 +312,7 @@ TestCase subclass: #ReportTest
 	poolDictionaries: ''
 	category: 'Portfolio-Solucion'!
 
-!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/19/2022 19:31:13'!
+!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 19:58:30'!
 test01ReportOfEmptyAccountReturnsOnlyTheBalance
 
 	| account1 report |
@@ -320,9 +320,9 @@ test01ReportOfEmptyAccountReturnsOnlyTheBalance
 	account1 := ReceptiveAccount new.
 	report := Report for: account1.
 	
-	self assert: (report generate) equals: (OrderedCollection with: 'Balance = 0')! !
+	self assert: (report generateAccountSummary) equals: (OrderedCollection with: 'Balance = 0')! !
 
-!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/19/2022 19:52:11'!
+!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 19:59:40'!
 test02ReportOfAccountWithDepositsReturnsThemAndTheBalance
 
 	| account1 report |
@@ -332,9 +332,9 @@ test02ReportOfAccountWithDepositsReturnsThemAndTheBalance
 	Deposit register: 200 on: account1.
 	report := Report for: account1.
 	
-	self assert: (report generate) equals: (OrderedCollection with: 'Depósito por 100' with: 'Depósito por 200' with: 'Balance = 300')! !
+	self assert: (report generateAccountSummary) equals: (OrderedCollection with: 'Depósito por 100' with: 'Depósito por 200' with: 'Balance = 300')! !
 
-!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/19/2022 19:57:25'!
+!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 19:58:30'!
 test03ReportOfAccountWithWithdrawsReturnsThemAndTheBalance
 
 	| account1 report |
@@ -344,7 +344,37 @@ test03ReportOfAccountWithWithdrawsReturnsThemAndTheBalance
 	Withdraw register: 200 on: account1.
 	report := Report for: account1.
 	
-	self assert: (report generate) equals: (OrderedCollection with: 'Extracción por 100' with: 'Extracción por 200' with: 'Balance = -300')! !
+	self assert: (report generateAccountSummary) equals: (OrderedCollection with: 'Extracción por 100' with: 'Extracción por 200' with: 'Balance = -300')! !
+
+!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:06:56'!
+test04ReportOfAccountWithTransferDepositsReturnsThemAndTheBalance
+
+	| account1 account2 report |
+	
+	account1 := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	Transfer from: account2 to: account1 amount: 100.
+	Transfer from: account2 to: account1 amount: 200.
+	report := Report for: account1.
+	
+	self 
+		assert: (report generateAccountSummary)
+		equals: (OrderedCollection with: 'Entrada por transferencia de 100' with: 'Entrada por transferencia de 200' with: 'Balance = 300')! !
+
+!ReportTest methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:18:36'!
+test05ReportOfAccountWithTransferWithdrawsReturnsThemAndTheBalance
+
+	| account1 account2 report |
+	
+	account1 := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	Transfer from: account2 to: account1 amount: 100.
+	Transfer from: account2 to: account1 amount: 200.
+	report := Report for: account2.
+	
+	self 
+		assert: (report generateAccountSummary)
+		equals: (OrderedCollection with: 'Salida por transferencia de 100' with: 'Salida por transferencia de 200' with: 'Balance = -300')! !
 
 
 !classDefinition: #TransferTest category: 'Portfolio-Solucion'!
@@ -703,6 +733,11 @@ affectBalance: aBalance
 
 	^aBalance + value ! !
 
+
+!Deposit methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:28:30'!
+reportOn: aReport 
+	^ aReport reportDeposit: self value.! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Deposit class' category: 'Portfolio-Solucion'!
@@ -736,6 +771,15 @@ affectBalance: aBalance
 !TransferDeposit methodsFor: 'accessing' stamp: 'pedro 10/19/2022 19:07:14'!
 relatedTransfer
 	^ transfer.! !
+
+!TransferDeposit methodsFor: 'accessing' stamp: 'pedro 10/20/2022 19:51:56'!
+value
+	^ transfer value.! !
+
+
+!TransferDeposit methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:30:36'!
+reportOn: aReport 
+	^ aReport reportTransferDeposit: self value.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -774,6 +818,15 @@ affectBalance: aBalance
 !TransferWithdraw methodsFor: 'accessing' stamp: 'pedro 10/19/2022 19:10:33'!
 relatedTransfer
 	^ transfer.! !
+
+!TransferWithdraw methodsFor: 'accessing' stamp: 'pedro 10/20/2022 20:21:15'!
+value
+	^ transfer value.! !
+
+
+!TransferWithdraw methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:27:01'!
+reportOn: aReport 
+	^ aReport reportTransferWithdraw: self value.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -815,6 +868,11 @@ affectBalance: aBalance
 
 	^aBalance - value! !
 
+
+!Withdraw methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:29:39'!
+reportOn: aReport 
+	^ aReport reportWithdraw: self value.! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Withdraw class' category: 'Portfolio-Solucion'!
@@ -840,17 +898,29 @@ initializeFor: aReceptiveAccount
 	account := aReceptiveAccount.! !
 
 
-!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/19/2022 19:54:30'!
-generate
+!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:25:50'!
+generateAccountSummary
 	| report |
-	report := OrderedCollection new.
-	account transactions do: [:transaction | 
-		(transaction isKindOf: Deposit) 
-			ifTrue: [report add: 'Depósito por ', transaction value printString ]
-			ifFalse: [report add: 'Extracción por ', transaction value printString ]
-		].
+	report := account transactions collect: [:transaction | transaction reportOn: self].
 	report add: ('Balance = ', account balance printString).
 	^ report.! !
+
+!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:29:04'!
+reportDeposit: amountDeposit
+	^ 'Depósito por ', amountDeposit printString.
+	! !
+
+!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:31:21'!
+reportTransferDeposit: amountDeposited 
+	^ 'Entrada por transferencia de ', amountDeposited printString.! !
+
+!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:27:57'!
+reportTransferWithdraw: amountTransfered 
+	^ 'Salida por transferencia de ', amountTransfered printString.! !
+
+!Report methodsFor: 'as yet unclassified' stamp: 'pedro 10/20/2022 20:30:13'!
+reportWithdraw: amountWithdrawed 
+	^ 'Extracción por ', amountWithdrawed printString.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -890,12 +960,6 @@ initializeFrom: aSenderAccount to: aReceiverAccount amount: amountToTransfer
 	relatedWithdraw := TransferWithdraw withTransfer: self register: amountToTransfer on: aSenderAccount.
 	relatedDeposit := TransferDeposit withTransfer: self register: amountToTransfer on: aReceiverAccount.
 	amountTransfered := amountToTransfer.! !
-
-!Transfer methodsFor: 'initializing' stamp: 'pedro 10/19/2022 19:16:53'!
-initializeWith: aDeposit andWithdraw: aWithdraw 
-
-	relatedDeposit := aDeposit.
-	relatedWithdraw := aWithdraw.! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
