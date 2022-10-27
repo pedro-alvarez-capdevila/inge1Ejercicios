@@ -362,12 +362,12 @@ for: aMarsRover
 
 !classDefinition: #HeadingAndPositionLogger category: 'MarsRover-WithHeading'!
 Logger subclass: #HeadingAndPositionLogger
-	instanceVariableNames: 'lastPosition lastHeading'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'MarsRover-WithHeading'!
 
-!HeadingAndPositionLogger methodsFor: 'initialization' stamp: 'ms 10/27/2022 13:59:56'!
+!HeadingAndPositionLogger methodsFor: 'initialization' stamp: 'ms 10/27/2022 16:06:36'!
 initializeWith: aMarsRover
 	
 	|position heading|
@@ -379,8 +379,6 @@ initializeWith: aMarsRover
 	aMarsRover attatch: self for: 'heading'.
 
 	log := OrderedCollection with: position with: heading.
-	lastPosition := position.
-	lastHeading := heading 
 	
 	! !
 
