@@ -337,8 +337,8 @@ log
 
 	^ log! !
 
-!Logger methodsFor: 'logging' stamp: 'ms 10/26/2022 18:29:13'!
-update: aMarsRover
+!Logger methodsFor: 'logging' stamp: 'ms 10/26/2022 20:16:58'!
+update: aData
 
 	self subclassResponsibility ! !
 
@@ -367,13 +367,16 @@ Logger subclass: #HeadingAndPositionLogger
 	poolDictionaries: ''
 	category: 'MarsRover-WithHeading'!
 
-!HeadingAndPositionLogger methodsFor: 'initialization' stamp: 'ms 10/26/2022 18:48:13'!
+!HeadingAndPositionLogger methodsFor: 'initialization' stamp: 'ms 10/27/2022 13:59:56'!
 initializeWith: aMarsRover
 	
 	|position heading|
-	aMarsRover addLogger: self.
+
 	position := aMarsRover position asString.
 	heading := aMarsRover heading.
+	
+	aMarsRover attatch: self for: 'position'.
+	aMarsRover attatch: self for: 'heading'.
 
 	log := OrderedCollection with: position with: heading.
 	lastPosition := position.
@@ -382,15 +385,10 @@ initializeWith: aMarsRover
 	! !
 
 
-!HeadingAndPositionLogger methodsFor: 'logging' stamp: 'ms 10/26/2022 18:51:01'!
-update: aMarsRover
+!HeadingAndPositionLogger methodsFor: 'logging' stamp: 'ms 10/27/2022 14:15:57'!
+update: aData
 	
-	| position heading |
-	
-	position := aMarsRover position asString.
-	heading := aMarsRover heading.
-	(position ~= lastPosition) ifTrue: [ log add: position. lastPosition := position ].
-	(heading ~= lastHeading) ifTrue: [ log add: heading. lastHeading := heading ]! !
+	log add: aData! !
 
 
 !classDefinition: #HeadingLogger category: 'MarsRover-WithHeading'!
@@ -400,18 +398,17 @@ Logger subclass: #HeadingLogger
 	poolDictionaries: ''
 	category: 'MarsRover-WithHeading'!
 
-!HeadingLogger methodsFor: 'logging' stamp: 'ms 10/26/2022 18:26:39'!
-update: aMarsRover
+!HeadingLogger methodsFor: 'logging' stamp: 'ms 10/27/2022 13:59:11'!
+update: aDirection
 	
-	| heading |
-	heading := aMarsRover heading.
-	(heading ~= log last) ifTrue: [ log add: heading asString ]! !
+	log add: aDirection! !
 
 
-!HeadingLogger methodsFor: 'initialization' stamp: 'ms 10/26/2022 18:25:12'!
+!HeadingLogger methodsFor: 'initialization' stamp: 'ms 10/27/2022 13:59:02'!
 initializeWith: aMarsRover
 	
-	aMarsRover addLogger: self.
+	aMarsRover attatch: self for: 'heading'.
+
 	log := OrderedCollection with: aMarsRover heading! !
 
 
@@ -422,19 +419,17 @@ Logger subclass: #PositionLogger
 	poolDictionaries: ''
 	category: 'MarsRover-WithHeading'!
 
-!PositionLogger methodsFor: 'logging' stamp: 'ms 10/26/2022 18:26:50'!
-update: aMarsRover
+!PositionLogger methodsFor: 'logging' stamp: 'ms 10/27/2022 14:06:56'!
+update: aPosition
 
-	| position |
-	
-	position := aMarsRover position.
-	(position asString ~= log last) ifTrue: [ log add: position asString ]! !
+	log add: aPosition! !
 
 
-!PositionLogger methodsFor: 'initialization' stamp: 'ms 10/26/2022 18:24:01'!
+!PositionLogger methodsFor: 'initialization' stamp: 'ms 10/27/2022 13:58:33'!
 initializeWith: aMarsRover
 
-	aMarsRover addLogger: self.
+	aMarsRover attatch: self for: 'position'.
+	
 	log := OrderedCollection with: aMarsRover position asString ! !
 
 
@@ -456,37 +451,39 @@ signalInvalidCommand
 	self error: self invalidCommandErrorDescription ! !
 
 
-!MarsRover methodsFor: 'initialization' stamp: 'ms 10/26/2022 17:16:30'!
+!MarsRover methodsFor: 'initialization' stamp: 'ms 10/27/2022 13:58:06'!
 initializeAt: aPosition heading: aHeadingType
 
 	position := aPosition.
 	head := aHeadingType for: self.
-	loggers := OrderedCollection new! !
+	loggers := Dictionary new.
+	loggers add: #position-> OrderedCollection new.
+	loggers add: #heading-> OrderedCollection new.! !
 
 
-!MarsRover methodsFor: 'heading' stamp: 'ms 10/26/2022 17:48:55'!
+!MarsRover methodsFor: 'heading' stamp: 'ms 10/27/2022 14:10:41'!
 headEast
 	
 	head := MarsRoverHeadingEast for: self.
-	self notify! !
+	self notifyHeading! !
 
-!MarsRover methodsFor: 'heading' stamp: 'ms 10/26/2022 17:49:10'!
+!MarsRover methodsFor: 'heading' stamp: 'ms 10/27/2022 14:11:17'!
 headNorth
 	
 	head := MarsRoverHeadingNorth for: self.
-	self notify! !
+	self notifyHeading! !
 
-!MarsRover methodsFor: 'heading' stamp: 'ms 10/26/2022 17:49:17'!
+!MarsRover methodsFor: 'heading' stamp: 'ms 10/27/2022 14:11:21'!
 headSouth
 	
 	head := MarsRoverHeadingSouth for: self.
-	self notify! !
+	self notifyHeading! !
 
-!MarsRover methodsFor: 'heading' stamp: 'ms 10/26/2022 17:49:22'!
+!MarsRover methodsFor: 'heading' stamp: 'ms 10/27/2022 14:11:27'!
 headWest
 	
 	head := MarsRoverHeadingWest for: self.
-	self notify! !
+	self notifyHeading! !
 
 !MarsRover methodsFor: 'heading' stamp: 'ms 10/26/2022 17:49:47'!
 rotateLeft
@@ -530,34 +527,34 @@ moveBackward
 	
 	head moveBackward.! !
 
-!MarsRover methodsFor: 'moving' stamp: 'ms 10/26/2022 17:52:26'!
+!MarsRover methodsFor: 'moving' stamp: 'ms 10/27/2022 14:09:56'!
 moveEast
 	
 	position := position + (1@0).
-	self notify! !
+	self notifyPosition! !
 
 !MarsRover methodsFor: 'moving' stamp: 'ms 10/24/2022 20:24:36'!
 moveForward
 	
 	head moveForward! !
 
-!MarsRover methodsFor: 'moving' stamp: 'ms 10/26/2022 17:52:30'!
+!MarsRover methodsFor: 'moving' stamp: 'ms 10/27/2022 14:10:22'!
 moveNorth
 	
 	position := position + (0@1).
-	self notify! !
+	self notifyPosition! !
 
-!MarsRover methodsFor: 'moving' stamp: 'ms 10/26/2022 17:52:34'!
+!MarsRover methodsFor: 'moving' stamp: 'ms 10/27/2022 14:10:25'!
 moveSouth
 	
 	position := position + (0@-1).
-	self notify! !
+	self notifyPosition! !
 
-!MarsRover methodsFor: 'moving' stamp: 'ms 10/26/2022 17:52:38'!
+!MarsRover methodsFor: 'moving' stamp: 'ms 10/27/2022 14:10:30'!
 moveWest
 	
 	position := position + (-1@0).
-	self notify! !
+	self notifyPosition! !
 
 
 !MarsRover methodsFor: 'command processing' stamp: 'ms 10/24/2022 20:22:21'!
@@ -588,15 +585,25 @@ position
 	^ position! !
 
 
-!MarsRover methodsFor: 'logging' stamp: 'ms 10/26/2022 17:18:04'!
-addLogger: aLogger
+!MarsRover methodsFor: 'logging' stamp: 'ms 10/27/2022 13:54:57'!
+attatch: aLogger for: anEventType
 
-	loggers add: aLogger ! !
+	(loggers at: anEventType) add: aLogger.! !
 
-!MarsRover methodsFor: 'logging' stamp: 'ms 10/26/2022 17:53:30'!
-notify
+!MarsRover methodsFor: 'logging' stamp: 'ms 10/27/2022 14:07:30'!
+notify: anEventType with: aData
 
-	^ loggers do: [:logger | logger update: self]! !
+	^ (loggers at: anEventType) do: [:logger | logger update: aData ]! !
+
+!MarsRover methodsFor: 'logging' stamp: 'ms 10/27/2022 14:11:06'!
+notifyHeading
+
+	^ self notify: 'heading' with: head direction! !
+
+!MarsRover methodsFor: 'logging' stamp: 'ms 10/27/2022 14:10:06'!
+notifyPosition
+
+	^ self notify: 'position' with: position asString! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
